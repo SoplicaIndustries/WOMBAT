@@ -92,8 +92,6 @@ namespace WOMBAT.Controllers
 
             if (userResult == null) return BadRequest("User not found");
 
-            
-
             await _userRepo.ClearTokens(userResult.Id);
 
             return Ok("User logged out successfully");
@@ -108,7 +106,21 @@ namespace WOMBAT.Controllers
             return Ok("Email confirmed successfuly");
         }
 
-       
+
+        [HttpGet("ValidateToken")]
+        public async Task<IActionResult> ValidateToken()
+        {
+
+            string authHeader = this.HttpContext.Request.Headers["Authorization"];
+
+            if (authHeader == null || !authHeader.StartsWith("Bearer")) return BadRequest("No auth header");
+
+            var isValid = await _userRepo.ValidateJWT(authHeader);
+            if(!isValid) return Unauthorized("Token invalid");
+            return Ok("Token valid");
+
+        }
+
 
 
     }
