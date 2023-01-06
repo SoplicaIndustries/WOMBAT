@@ -26,6 +26,16 @@ public class ApplicationDbContext : IdentityDbContext<User>
         // Add your customizations after calling base.OnModelCreating(builder);
     }
 
+    public bool ValidateToken(string token)
+    {
+        string hashedToken = Convert.ToBase64String(EncodingTools.Hash(token, ""));
+
+        var dbToken = UserTokens.Where(t => t.Value == hashedToken).ToList();
+
+        if (dbToken.Count()<=0) return false;
+        return true;
+
+    }
 
 
 

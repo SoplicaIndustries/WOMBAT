@@ -11,7 +11,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Net.Mail;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace WOMBAT.Repositories
 {
@@ -90,7 +89,9 @@ namespace WOMBAT.Repositories
 
 
             string JWTstring = new JwtSecurityTokenHandler().WriteToken(JWT);
-            _db.UserTokens.Add(new IdentityUserToken<string> { LoginProvider = "", Name = "", UserId = user.Id, Value = JWTstring });
+
+
+            _db.UserTokens.Add(new IdentityUserToken<string> { LoginProvider = "", Name = "", UserId = user.Id, Value = Convert.ToBase64String(EncodingTools.Hash(JWTstring, "")) });
             _db.SaveChanges();
 
             return JWTstring;
@@ -237,44 +238,6 @@ namespace WOMBAT.Repositories
         public async Task<bool> EmailConfirmedCheck(User user)
         {
             return await _userManager.IsEmailConfirmedAsync(user);
-        }
-
-        public async Task<bool> ValidateJWT(string header)
-        {
-            var token = EncodingTools.CleanHeaderJWT(header);
-
-            var handler = new JwtSecurityTokenHandler();
-
-            if (!handler.CanReadToken(token)) return false;
-
-            try
-            {
-                handler.ValidateToken(token, new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.GetValue<string>("JWT:Key"))),
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidAudience = _config.GetValue<string>("JWT:Audience"),
-                    ValidIssuer = _config.GetValue<string>("JWT:Issuer"),
-                    ClockSkew = TimeSpan.Zero
-                }, out SecurityToken validatedToken) ;
-
-                
-            }
-            catch(Exception ex) 
-            {
-
-                return false;
-            }
-
-
-            var dbToken = _db.UserTokens.Where(t => t.Value == token);
-            if(dbToken.Count() == 0) return false;
-
-            return true;
-       
-
         }
     }
 }

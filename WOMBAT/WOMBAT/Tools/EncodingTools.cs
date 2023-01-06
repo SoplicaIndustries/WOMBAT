@@ -42,7 +42,7 @@ namespace WOMBAT.Tools
             return Convert.ToBase64String(salt);
         }
 
-        public static LoginHeaderData DecodeLoginHeader(string authHeader)
+        public static HeaderData DecodeLoginHeader(string authHeader)
         {
             string encodedUsernamePassword = authHeader.Substring("Basic ".Length).Trim();
             Encoding encoding = Encoding.GetEncoding("iso-8859-1");
@@ -55,16 +55,11 @@ namespace WOMBAT.Tools
 
         }
 
-        public static string CleanHeaderJWT(string authHeader)
-        {
-            string jwtString = authHeader.Substring("Bearer ".Length).Trim();
-            return jwtString;
-        }
-
         public static string EncodeToken(string token)
         {
             var tokenbytes = Encoding.UTF8.GetBytes(token);
             return WebEncoders.Base64UrlEncode(tokenbytes);
+
         }
 
         public static string DecodeToken(string token)
