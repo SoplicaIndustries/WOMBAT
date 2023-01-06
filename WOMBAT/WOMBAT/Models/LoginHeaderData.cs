@@ -1,6 +1,6 @@
 ﻿namespace WOMBAT.Models
 {
-    public class HeaderData
+    public class LoginHeaderData
     {
         public string Mail { get; set; }
 
