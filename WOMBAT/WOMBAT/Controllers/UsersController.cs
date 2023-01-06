@@ -47,7 +47,7 @@ namespace WOMBAT.Controllers
 
                 if (RoleList.Count() == 0) return StatusCode(500, "No roles");
                 var token = await _userRepo.GenerateToken(user, RoleList);
-                return Ok(token);
+                return Ok(new { token, user.Id, user.UserName, user.Email });
             }
             return BadRequest("No auth header");
 
@@ -84,18 +84,27 @@ namespace WOMBAT.Controllers
 
         
 
-        [HttpPost("LogOut")]
+        [HttpGet("LogOut")]
 
-        public async Task<IActionResult> LogOut(User user)
+        public async Task<IActionResult> LogOut(string token)
         {
-            var userResult = await _userRepo.GetUser(user.Email);
+            var result = await _userRepo.ClearToken(token);
 
-            if (userResult == null) return BadRequest("User not found");
-
-            await _userRepo.ClearTokens(userResult.Id);
+            if (!result) return BadRequest("Invalid token");
 
             return Ok("User logged out successfully");
         }
+
+        [HttpGet("LogOutAllDevices")]
+        public async Task<IActionResult> LogOutAllDevices(string uid)
+        {
+            var result = await _userRepo.ClearTokens(uid);
+
+            if (!result) return NotFound("Invalid user id or no tokens found");
+
+            return Ok("User logged out successfully");
+        }
+
 
         [HttpGet("ConfirmEmail")]
         
@@ -121,7 +130,25 @@ namespace WOMBAT.Controllers
 
         }
 
+        [HttpGet("SendChangeEmailConfirmation")]
 
+        public async Task<IActionResult> SendChangeEmailConfirmation(string mail, string newMail)
+        {
+
+            var sendResult = await _userRepo.SendChangeEmailConfirmation(mail, newMail);
+            if (!sendResult) return StatusCode(500, "Failed to send email");
+            return Ok("Email sent");
+        }
+
+
+        [HttpGet("ChangeEmail")]
+
+        public async Task<IActionResult> ChangeEmail(string id, string newMail, string token)
+        {
+            var sendResult = await _userRepo.ChangeMail(id, newMail, token);
+            if (!sendResult) return StatusCode(500, "Failed to change mail");
+            return Ok("Email changed");
+        }
 
     }
 }

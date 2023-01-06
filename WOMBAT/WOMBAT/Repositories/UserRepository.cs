@@ -45,19 +45,19 @@ namespace WOMBAT.Repositories
             return true;
         }
 
-        public Task ClearTokens(string UserId)
+        public async Task<bool> ClearTokens(string UserId)
         {
             var tokens = _db.UserTokens.Where(t => t.UserId == UserId);
-            if (tokens != null && tokens.Count() >= 1)
+            if (tokens.Count() == 0) return false;
+           
+            foreach(var token in tokens)
             {
-                foreach(var token in tokens)
-                {
                     _db.UserTokens.Remove(token);
-                }
-                _db.SaveChanges();
             }
+           _db.SaveChanges();
+          
 
-            return Task.CompletedTask;
+            return true;
 
         }
 
@@ -98,8 +98,6 @@ namespace WOMBAT.Repositories
 
         public async Task<User> CreateUser(ViewUser vu)
         {
-            var response = new UserManagerResponse();
-
             var user = _mapper.Map<User>(vu);
 
             string salt = EncodingTools.Salt();
@@ -150,11 +148,13 @@ namespace WOMBAT.Repositories
 
         }
 
-        public async Task<bool> ChangeMail(string mail, string newMail, string token)
+        public async Task<bool> ChangeMail(string uid, string newMail, string token)
         {
-            var user = await _userManager.FindByEmailAsync(mail);
-            if (user == null) return false;
-            var mailResult = await _userManager.ChangeEmailAsync(user, newMail, token);
+            var user = await _userManager.FindByIdAsync(uid);
+
+            var decodedToken = EncodingTools.DecodeToken(token);
+
+            var mailResult = await _userManager.ChangeEmailAsync(user, newMail, decodedToken);
             if(!mailResult.Succeeded) return false;
             return true;
 
@@ -166,54 +166,7 @@ namespace WOMBAT.Repositories
             return token;
         }
 
-        public async Task<bool> SendMail(string to, string subject, string message)
-        {
-            //add to interface
-
-            var senderMail = _config.GetValue<string>("MailService:Mail");
-            var senderPass = _config.GetValue<string>("MailService:Pass");
-
-
-            var address = new MailAddress(senderMail);
-            MailMessage mail = new MailMessage();
-            mail.From = address;
-
-            mail.Subject = subject;
-            mail.To.Add(new MailAddress(to));
-
-            SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587);
-            smtp.EnableSsl = true;
-            smtp.UseDefaultCredentials = false;
-            smtp.Credentials = new System.Net.NetworkCredential(senderMail, senderPass);
-            mail.IsBodyHtml= true;
-
-            mail.Body = message;
-            smtp.Send(mail);
-
-            //add try catch
-
-            smtp.Dispose();
-
-            return true;
-
-        }
-
-        public async Task<bool> SendConfirmationMail(User user)
-        {
-            var token = await GenerateEmailConfirmationToken(user);
-
-            if (token == null) return false;
-
-            var encodedToken = EncodingTools.EncodeToken(token);
-
-            string Url = _config.GetValue<string>("MailService:ConfirmationUrl");
-            string Args = $"/?id={user.Id}&token={encodedToken}";
-            string Link = $"To confirm your email, please click <a href='{Url + Args}'>Here</a>";
-
-            var sendResult = await SendMail(user.Email, "Email confirmation", Link);
-
-            return sendResult;
-        }
+        
 
         public async Task<string> GenerateEmailConfirmationToken(User user)
         {
@@ -276,5 +229,95 @@ namespace WOMBAT.Repositories
        
 
         }
+
+        public async Task<bool> ClearToken(string token)
+        {
+            var dbToken = _db.UserTokens.Where(t => t.Value == token).FirstOrDefault();
+            if (dbToken == null) return false;
+            _db.UserTokens.Remove(dbToken);
+            _db.SaveChanges();
+            return true;
+        }
+
+
+
+        // MAIL
+
+
+
+
+        public async Task<bool> SendChangeEmailConfirmation(string mail, string newMail)
+        {
+
+            var user = await _userManager.FindByEmailAsync(mail);
+
+            if (user == null) return false;
+
+            var token = await GenerateEmailChangeToken(user, newMail);
+            var encodedToken = EncodingTools.EncodeToken(token);
+
+            string Url = _config.GetValue<string>("MailService:ChangeMailUrl");
+            string Args = $"/?id={user.Id}&newMail={newMail}&token={encodedToken}";
+            string Link = $"To confirm email change, please click <a href='{Url + Args}'>Here</a>";
+
+            await SendMail(newMail, "Email change", Link);
+
+            return true;
+        }
+
+    
+
+        public async Task<bool> SendMail(string to, string subject, string message)
+        {
+            //add to interface
+
+            var senderMail = _config.GetValue<string>("MailService:Mail");
+            var senderPass = _config.GetValue<string>("MailService:Pass");
+
+
+            var address = new MailAddress(senderMail);
+            MailMessage mail = new MailMessage();
+            mail.From = address;
+
+            mail.Subject = subject;
+            mail.To.Add(new MailAddress(to));
+
+            SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587);
+            smtp.EnableSsl = true;
+            smtp.UseDefaultCredentials = false;
+            smtp.Credentials = new System.Net.NetworkCredential(senderMail, senderPass);
+            mail.IsBodyHtml= true;
+
+            mail.Body = message;
+            smtp.Send(mail);
+
+            //add try catch
+
+            smtp.Dispose();
+
+            return true;
+
+        }
+
+        public async Task<bool> SendConfirmationMail(User user)
+        {
+            var token = await GenerateEmailConfirmationToken(user);
+
+            if (token == null) return false;
+
+            var encodedToken = EncodingTools.EncodeToken(token);
+
+            string Url = _config.GetValue<string>("MailService:ConfirmationUrl");
+            string Args = $"/?id={user.Id}&token={encodedToken}";
+            string Link = $"To confirm your email, please click <a href='{Url + Args}'>Here</a>";
+
+            var sendResult = await SendMail(user.Email, "Email confirmation", Link);
+
+            return sendResult;
+        }
+
+
+
+
     }
 }
