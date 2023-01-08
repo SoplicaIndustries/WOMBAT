@@ -4,9 +4,12 @@ using WOMBAT.Tools;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.IO.Pipelines;
+using Microsoft.AspNetCore.Mvc.Filters;
+using WOMBAT.Filters;
 
 namespace WOMBAT.Controllers
 {
+
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -19,7 +22,7 @@ namespace WOMBAT.Controllers
 
 
         [HttpPost("Login")]
-        
+        [ServiceFilter(typeof(ActionFilters))]
         public async Task<IActionResult> Login() 
         {
 
@@ -56,7 +59,8 @@ namespace WOMBAT.Controllers
         }
 
         [HttpPost("Register")]
-      
+        [ServiceFilter(typeof(ActionFilters))]
+
         public async Task<IActionResult> Register(ViewUser vu)
         {
 
@@ -85,7 +89,8 @@ namespace WOMBAT.Controllers
 
         
 
-        [HttpGet("LogOut")]
+        [HttpPost("LogOut")]
+        [ServiceFilter(typeof(ActionFilters))]
 
         public async Task<IActionResult> LogOut()
         {
@@ -100,7 +105,8 @@ namespace WOMBAT.Controllers
             return Ok("User logged out successfully");
         }
 
-        [HttpGet("LogOutAllDevices")]
+        [HttpPost("LogOutAllDevices")]
+        [ServiceFilter(typeof(ActionFilters))]
         public async Task<IActionResult> LogOutAllDevices(string uid)
         {
             var result = await _userRepo.ClearTokens(uid);
@@ -111,8 +117,9 @@ namespace WOMBAT.Controllers
         }
 
 
-        [HttpGet("ConfirmEmail")]
-        
+        [HttpPost("ConfirmEmail")]
+        [ServiceFilter(typeof(ActionFilters))]
+
         public async Task<IActionResult> ConfirmEmail(string id, string token)
         {
             var confirmationResult = await _userRepo.ConfirmEmail(id, token);
@@ -121,7 +128,8 @@ namespace WOMBAT.Controllers
         }
 
 
-        [HttpGet("ValidateToken")]
+        [HttpPost("ValidateToken")]
+        [ServiceFilter(typeof(ActionFilters))]
         public async Task<IActionResult> ValidateToken()
         {
 
@@ -137,8 +145,8 @@ namespace WOMBAT.Controllers
 
 
 
-        [HttpGet("SendChangeEmailConfirmation")]
-
+        [HttpPost("SendChangeEmailConfirmation")]
+        [ServiceFilter(typeof(ActionFilters))]
         public async Task<IActionResult> SendChangeEmailConfirmation(string mail, string newMail)
         {
 
@@ -148,8 +156,8 @@ namespace WOMBAT.Controllers
         }
 
 
-        [HttpGet("ChangeEmail")]
-
+        [HttpPost("ChangeEmail")]
+        [ServiceFilter(typeof(ActionFilters))]
         public async Task<IActionResult> ChangeEmail(string id, string newMail, string token)
         {
             var sendResult = await _userRepo.ChangeMail(id, newMail, token);
@@ -160,7 +168,8 @@ namespace WOMBAT.Controllers
 
 
 
-        [HttpGet("SendResetPasswordConfirmation")]
+        [HttpPost ("SendResetPasswordConfirmation")]
+        [ServiceFilter(typeof(ActionFilters))]
         public async Task<IActionResult> SendResetPasswordConfirmation(string mail)
         {
 
@@ -169,7 +178,8 @@ namespace WOMBAT.Controllers
             return Ok("Email sent");
         }
 
-        [HttpGet("ResetPassword")]
+        [HttpPost("ResetPassword")]
+        [ServiceFilter(typeof(ActionFilters))]
         public async Task<IActionResult> ResetPassword(string token)
         {
             string authHeader = this.HttpContext.Request.Headers["Authorization"];
