@@ -275,8 +275,6 @@ namespace WOMBAT.Repositories
 
         public async Task<bool> SendMail(string to, string subject, string message)
         {
-            //add to interface
-
             var senderMail = _config.GetValue<string>("MailService:Mail");
             var senderPass = _config.GetValue<string>("MailService:Pass");
             var server = _config.GetValue<string>("MailService:SmtpServer");
@@ -296,9 +294,17 @@ namespace WOMBAT.Repositories
             mail.IsBodyHtml= true;
 
             mail.Body = message;
-            smtp.Send(mail);
+            try
+            {
+                smtp.Send(mail);
+            }
+            catch(Exception ex)
+            {
+                smtp.Dispose();
+                return false;
+            }
 
-            //add try catch
+            
 
             smtp.Dispose();
 

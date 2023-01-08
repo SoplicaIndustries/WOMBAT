@@ -11,6 +11,7 @@ namespace WOMBAT.Models
                 .ForMember(u => u.Email, opt => opt.MapFrom(x => x.Mail))
                
                 ;
+
         }
     }
 }
