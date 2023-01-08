@@ -25,36 +25,29 @@ namespace WOMBAT.Controllers
         [ServiceFilter(typeof(ActionFilters))]
         public async Task<IActionResult> Login() 
         {
-
-            //User repo login function to login, function will return action result
-
             string authHeader = this.HttpContext.Request.Headers["Authorization"];
 
-            if (authHeader != null && authHeader.StartsWith("Basic"))
-            {
+            if (authHeader == null || !authHeader.StartsWith("Basic")) return BadRequest("No auth header");
                 
-                var userData = EncodingTools.DecodeLoginHeader(authHeader);
+            var userData = EncodingTools.DecodeLoginHeader(authHeader);
 
-                var user = await _userRepo.GetUser(userData.Mail);
+            var user = await _userRepo.GetUser(userData.Mail);
 
-                if (user == null) return NotFound("User not found");
+            if (user == null) return NotFound("User not found");
 
-                var passCheck = await _userRepo.PasswordCheck(user, userData.Pass);
+            var passCheck = await _userRepo.PasswordCheck(user, userData.Pass);
 
-                if (!passCheck) return Unauthorized("Wrong password");
+            if (!passCheck) return Unauthorized("Wrong password");
 
-                var isEmailConfirmed = await _userRepo.EmailConfirmedCheck(user);
+            var isEmailConfirmed = await _userRepo.EmailConfirmedCheck(user);
 
-                if (!isEmailConfirmed) return Unauthorized("Email needs to be confirmed");
+            if (!isEmailConfirmed) return Unauthorized("Email needs to be confirmed");
 
-                var RoleList = await _userRepo.GetRoles(user);
+            var RoleList = await _userRepo.GetRoles(user);
 
-                if (RoleList.Count() == 0) return StatusCode(500, "No roles");
-                var token = await _userRepo.GenerateToken(user, RoleList);
-                return Ok(new { token, user.Id, user.UserName, user.Email });
-            }
-            return BadRequest("No auth header");
-
+            if (RoleList.Count() == 0) return StatusCode(500, "No roles");
+            var token = await _userRepo.GenerateToken(user, RoleList);
+            return Ok(new { token, user.Id, user.UserName, user.Email });
 
         }
 
@@ -72,7 +65,7 @@ namespace WOMBAT.Controllers
 
             var userResult = await _userRepo.CreateUser(vu);
 
-            if(userResult == null) return StatusCode(500);
+            if(userResult == null) return StatusCode(500, "Failed to create user");
 
             var roleResult = await _userRepo.AssignRole(userResult, vu.Role);
 
