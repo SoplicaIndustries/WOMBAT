@@ -3,6 +3,7 @@ using WOMBAT.Models;
 using WOMBAT.Tools;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.IO.Pipelines;
 
 namespace WOMBAT.Controllers
 {
@@ -86,9 +87,13 @@ namespace WOMBAT.Controllers
 
         [HttpGet("LogOut")]
 
-        public async Task<IActionResult> LogOut(string token)
+        public async Task<IActionResult> LogOut()
         {
-            var result = await _userRepo.ClearToken(token);
+            string authHeader = this.HttpContext.Request.Headers["Authorization"];
+
+            if (authHeader == null || !authHeader.StartsWith("Bearer")) return BadRequest("No auth header");
+
+            var result = await _userRepo.ClearToken(authHeader);
 
             if (!result) return BadRequest("Invalid token");
 
@@ -130,6 +135,8 @@ namespace WOMBAT.Controllers
 
         }
 
+
+
         [HttpGet("SendChangeEmailConfirmation")]
 
         public async Task<IActionResult> SendChangeEmailConfirmation(string mail, string newMail)
@@ -149,6 +156,31 @@ namespace WOMBAT.Controllers
             if (!sendResult) return StatusCode(500, "Failed to change mail");
             return Ok("Email changed");
         }
+
+
+
+
+        [HttpGet("SendResetPasswordConfirmation")]
+        public async Task<IActionResult> SendResetPasswordConfirmation(string mail)
+        {
+
+            var sendResult = await _userRepo.SendPasswordResetConfirmation(mail);
+            if (!sendResult) return StatusCode(500, "Failed to send email");
+            return Ok("Email sent");
+        }
+
+        [HttpGet("ResetPassword")]
+        public async Task<IActionResult> ResetPassword(string token)
+        {
+            string authHeader = this.HttpContext.Request.Headers["Authorization"];
+
+            if (authHeader == null || !authHeader.StartsWith("Basic")) return BadRequest("no auth header");
+
+            var resetResult = await _userRepo.ChangePassword(authHeader, token);
+            if (!resetResult) return StatusCode(500, "Failed to change password");
+            return Ok("Password changed");
+        }
+
 
     }
 }

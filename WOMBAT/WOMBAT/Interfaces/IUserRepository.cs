@@ -14,7 +14,7 @@ namespace WOMBAT.Interfaces
 
         Task<bool> ClearTokens(string UserId);
 
-        Task<bool> ClearToken(string token);
+        Task<bool> ClearToken(string header);
 
         Task<List<string>> GetRoles(User user);
 
@@ -30,7 +30,7 @@ namespace WOMBAT.Interfaces
 
         Task<bool> CheckUsernameTaken(string name);
 
-        Task<bool> ChangePassword(User user, string currentPass, string newPass);
+        Task<bool> ChangePassword(string authHeader, string token);
 
         Task<string> GenerateEmailChangeToken(User user, string newMail);
         Task<bool> ChangeMail(string uid, string newMail, string token);
@@ -45,6 +45,8 @@ namespace WOMBAT.Interfaces
         Task<bool> SendChangeEmailConfirmation(string mail, string newMail);
 
 
+        Task<bool> SendPasswordResetConfirmation(string mail);
 
+        Task<string> GeneratePasswordResetToken(User user);
     }
 }

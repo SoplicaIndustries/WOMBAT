@@ -139,10 +139,14 @@ namespace WOMBAT.Repositories
             if (user == null) return false;
             return true;
         }
-
-        public async Task<bool> ChangePassword(User user, string currentPass, string newPass)
+        public async Task<bool> ChangePassword(string authHeader, string token)
         {
-            var passResult = await _userManager.ChangePasswordAsync(user, currentPass + user.Salt, newPass);
+            var decodedToken = EncodingTools.DecodeToken(token);
+
+            var userData = EncodingTools.DecodeLoginHeader(authHeader);
+
+            var user = await _userManager.FindByIdAsync(userData.Mail);
+            var passResult = await _userManager.ResetPasswordAsync(user, decodedToken, userData.Pass + user.Salt);
             if(!passResult.Succeeded) return false;
             return true;
 
@@ -230,8 +234,10 @@ namespace WOMBAT.Repositories
 
         }
 
-        public async Task<bool> ClearToken(string token)
+        public async Task<bool> ClearToken(string header)
         {
+
+            var token = EncodingTools.CleanHeaderJWT(header);
             var dbToken = _db.UserTokens.Where(t => t.Value == token).FirstOrDefault();
             if (dbToken == null) return false;
             _db.UserTokens.Remove(dbToken);
@@ -273,7 +279,8 @@ namespace WOMBAT.Repositories
 
             var senderMail = _config.GetValue<string>("MailService:Mail");
             var senderPass = _config.GetValue<string>("MailService:Pass");
-
+            var server = _config.GetValue<string>("MailService:SmtpServer");
+            var port = _config.GetValue<int>("MailService:Port");
 
             var address = new MailAddress(senderMail);
             MailMessage mail = new MailMessage();
@@ -282,7 +289,7 @@ namespace WOMBAT.Repositories
             mail.Subject = subject;
             mail.To.Add(new MailAddress(to));
 
-            SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587);
+            SmtpClient smtp = new SmtpClient(server, port);
             smtp.EnableSsl = true;
             smtp.UseDefaultCredentials = false;
             smtp.Credentials = new System.Net.NetworkCredential(senderMail, senderPass);
@@ -318,6 +325,32 @@ namespace WOMBAT.Repositories
 
 
 
+        public async Task<bool> SendPasswordResetConfirmation(string mail)
+        {
+            var user = await _userManager.FindByEmailAsync(mail);
 
+            if (user == null) return false;
+
+            var token = await GeneratePasswordResetToken(user);
+            if (token == null) return false;
+
+            var encodedToken = EncodingTools.EncodeToken(token);
+
+            string Url = _config.GetValue<string>("MailService:PasswordResetUrl");
+            string Args = $"?uid={user.Id}&token={encodedToken}";
+            string Link = $"To reset your password, please click <a href='{Url + Args}'>Here</a>";
+
+            var sendResult = await SendMail(user.Email, "Reset your password", Link);
+
+            return sendResult;
+
+        }
+
+        public async Task<string> GeneratePasswordResetToken(User user)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            if (token == null || string.IsNullOrWhiteSpace(token)) return null;
+            return token;
+        }
     }
 }
