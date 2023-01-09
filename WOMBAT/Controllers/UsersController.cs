@@ -48,7 +48,6 @@ namespace WOMBAT.Controllers
             if (RoleList.Count() == 0) return StatusCode(500, "No roles");
             var token = await _userRepo.GenerateToken(user, RoleList);
             return Ok(new { token, user.Id, user.UserName, user.Email });
-
         }
 
         [HttpPost("Register")]
@@ -62,6 +61,9 @@ namespace WOMBAT.Controllers
             var usernameResult = await _userRepo.CheckUsernameTaken(vu.Username);
 
             if(usernameResult) return BadRequest("Username already taken");
+
+            var mailResult = await _userRepo.CheckEmailTaken(vu.Mail);
+            if(!mailResult) return BadRequest("Email already taken");
 
             var userResult = await _userRepo.CreateUser(vu);
 
@@ -98,21 +100,7 @@ namespace WOMBAT.Controllers
             return Ok("User logged out successfully");
         }
 
-        [HttpPost("LogOutAllDevices")]
-        [ServiceFilter(typeof(ActionFilters))]
-        public async Task<IActionResult> LogOutAllDevices(string uid)
-        {
-            var result = await _userRepo.ClearTokens(uid);
-
-            if (!result) return NotFound("Invalid user id or no tokens found");
-
-            return Ok("User logged out successfully");
-        }
-
-
-        [HttpPost("ConfirmEmail")]
-        [ServiceFilter(typeof(ActionFilters))]
-
+        [HttpGet("ConfirmEmail")]
         public async Task<IActionResult> ConfirmEmail(string id, string token)
         {
             var confirmationResult = await _userRepo.ConfirmEmail(id, token);
@@ -130,7 +118,9 @@ namespace WOMBAT.Controllers
 
             if (authHeader == null || !authHeader.StartsWith("Bearer")) return BadRequest("No auth header");
 
-            var isValid = await _userRepo.ValidateJWT(authHeader);
+            var token = EncodingTools.CleanHeaderJWT(authHeader);
+
+            var isValid = await _userRepo.ValidateJWT(token);
             if(!isValid) return Unauthorized("Token invalid");
             return Ok("Token valid");
 
@@ -149,8 +139,7 @@ namespace WOMBAT.Controllers
         }
 
 
-        [HttpPost("ChangeEmail")]
-        [ServiceFilter(typeof(ActionFilters))]
+        [HttpGet("ChangeEmail")]
         public async Task<IActionResult> ChangeEmail(string id, string newMail, string token)
         {
             var sendResult = await _userRepo.ChangeMail(id, newMail, token);
@@ -171,8 +160,7 @@ namespace WOMBAT.Controllers
             return Ok("Email sent");
         }
 
-        [HttpPost("ResetPassword")]
-        [ServiceFilter(typeof(ActionFilters))]
+        [HttpGet("ResetPassword")]
         public async Task<IActionResult> ResetPassword(string token)
         {
             string authHeader = this.HttpContext.Request.Headers["Authorization"];

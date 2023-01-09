@@ -24,7 +24,7 @@ namespace WOMBAT.Filters
             }
             var config = context.HttpContext.RequestServices.GetRequiredService<IConfiguration>();
             var apiKey = config.GetValue<string>("ApiKey");
-            var decodedKey = extractedApiKey; // <- do prezentacji EncodingTools.DecodeToken(extractedApiKey);
+            var decodedKey = EncodingTools.DecodeToken(extractedApiKey);
             if (!apiKey.Equals(decodedKey))
             {
                 context.Result = new ContentResult()

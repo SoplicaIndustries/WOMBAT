@@ -45,22 +45,6 @@ namespace WOMBAT.Repositories
             return true;
         }
 
-        public async Task<bool> ClearTokens(string UserId)
-        {
-            var tokens = _db.UserTokens.Where(t => t.UserId == UserId);
-            if (tokens.Count() == 0) return false;
-           
-            foreach(var token in tokens)
-            {
-                    _db.UserTokens.Remove(token);
-            }
-           _db.SaveChanges();
-          
-
-            return true;
-
-        }
-
         public async Task<List<string>> GetRoles(User user)
         {
             var roleList = await _userManager.GetRolesAsync(user);
@@ -72,7 +56,17 @@ namespace WOMBAT.Repositories
 
         public async Task<string> GenerateToken(User user, List<string> roles)
         {
-            await ClearTokens(user.Id);
+
+            var dbToken = _db.UserTokens.Where(t => t.UserId == user.Id).FirstOrDefault();
+            if (dbToken != null)
+            {
+                var isValid = await ValidateJWT(dbToken.Value);
+                if (dbToken != null && dbToken != default && isValid) return dbToken.Value;
+                _db.UserTokens.Remove(dbToken);
+                _db.SaveChanges();
+            }
+
+
 
             IEnumerable<Claim> claims = Enumerable.Empty<Claim> ();
 
@@ -196,10 +190,8 @@ namespace WOMBAT.Repositories
             return await _userManager.IsEmailConfirmedAsync(user);
         }
 
-        public async Task<bool> ValidateJWT(string header)
+        public async Task<bool> ValidateJWT(string token)
         {
-            var token = EncodingTools.CleanHeaderJWT(header);
-
             var handler = new JwtSecurityTokenHandler();
 
             if (!handler.CanReadToken(token)) return false;
@@ -357,6 +349,13 @@ namespace WOMBAT.Repositories
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             if (token == null || string.IsNullOrWhiteSpace(token)) return null;
             return token;
+        }
+
+        public async Task<bool> CheckEmailTaken(string mail)
+        {
+            var dbUsers = _userManager.Users.Where(u => u.Email == mail);
+            if (dbUsers.Count() > 0) return false;
+            return true;
         }
     }
 }

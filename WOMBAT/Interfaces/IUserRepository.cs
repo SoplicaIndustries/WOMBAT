@@ -12,13 +12,11 @@ namespace WOMBAT.Interfaces
 
         Task<bool> EmailConfirmedCheck(User user);
 
-        Task<bool> ClearTokens(string UserId);
-
         Task<bool> ClearToken(string header);
 
         Task<List<string>> GetRoles(User user);
 
-        Task<bool> ValidateJWT(string header);
+        Task<bool> ValidateJWT(string token);
 
         Task<string> GenerateToken(User user, List<string> roles);
 
@@ -29,6 +27,8 @@ namespace WOMBAT.Interfaces
         Task<bool> DeleteUser (User user);
 
         Task<bool> CheckUsernameTaken(string name);
+
+        Task<bool> CheckEmailTaken(string mail);
 
         Task<bool> ChangePassword(string authHeader, string token);
 

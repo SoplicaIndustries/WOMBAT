@@ -8,6 +8,8 @@ using System.Text;
 using WOMBAT.Interfaces;
 using WOMBAT.Repositories;
 using WOMBAT.Filters;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using System.Collections.Generic;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
@@ -32,6 +34,7 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ActionFilters>();
+
 
 builder.Services.AddAuthentication(auth =>
 {
