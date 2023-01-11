@@ -38,4 +38,6 @@ API authentication provides your client user with JSON Web Token, which can be l
     2. Database should have following scheduled events:
         a) Expired token cleaning every 1 day (event example provided in documentation)
         b) Unconfirmed user cleaning every 3 hours (event example provided in documentation)
+## Documentation
+https://documenter.getpostman.com/view/19462677/2s8ZDR6jzR
         
