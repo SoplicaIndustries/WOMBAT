@@ -17,6 +17,10 @@ API authentication provides your client user with JSON Web Token, which can be l
     1. User creation and login
     2. Email confirmation for important actions
     3. User authentication and authorization
+    
+## DB mode feature
+    Db mode is a feature that allows client to choose between using just the JWT for all auth operations, or use server side token validation.
+    Enabling db mode saves users token in database, and allows client to use ValidateToken call to check if token is valid and is in database, therefore check if token       was actually created by API (even if private key is exposed), and LogOut call, which deletes token from database to allow its invalidation.
 
 ## App settings configuration
     1. Database details
