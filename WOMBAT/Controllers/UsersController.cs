@@ -22,7 +22,7 @@ namespace WOMBAT.Controllers
 
 
         [HttpPost("Login")]
-        [ServiceFilter(typeof(ActionFilters))]
+        [ServiceFilter(typeof(KeyFilters))]
         public async Task<IActionResult> Login() 
         {
             string authHeader = this.HttpContext.Request.Headers["Authorization"];
@@ -51,7 +51,7 @@ namespace WOMBAT.Controllers
         }
 
         [HttpPost("Register")]
-        [ServiceFilter(typeof(ActionFilters))]
+        [ServiceFilter(typeof(KeyFilters))]
 
         public async Task<IActionResult> Register(ViewUser vu)
         {
@@ -85,7 +85,8 @@ namespace WOMBAT.Controllers
         
 
         [HttpPost("LogOut")]
-        [ServiceFilter(typeof(ActionFilters))]
+        [ServiceFilter(typeof(DbModeFilter))]
+        [ServiceFilter(typeof(KeyFilters))]
 
         public async Task<IActionResult> LogOut()
         {
@@ -100,7 +101,8 @@ namespace WOMBAT.Controllers
             return Ok("User logged out successfully");
         }
 
-        [HttpGet("ConfirmEmail")]
+        [HttpPost("ConfirmEmail")]
+        [ServiceFilter(typeof(KeyFilters))]
         public async Task<IActionResult> ConfirmEmail(string id, string token)
         {
             var confirmationResult = await _userRepo.ConfirmEmail(id, token);
@@ -110,7 +112,9 @@ namespace WOMBAT.Controllers
 
 
         [HttpPost("ValidateToken")]
-        [ServiceFilter(typeof(ActionFilters))]
+        [ServiceFilter(typeof(DbModeFilter))]
+        [ServiceFilter(typeof(KeyFilters))]
+        
         public async Task<IActionResult> ValidateToken()
         {
 
@@ -129,7 +133,7 @@ namespace WOMBAT.Controllers
 
 
         [HttpPost("SendChangeEmailConfirmation")]
-        [ServiceFilter(typeof(ActionFilters))]
+        [ServiceFilter(typeof(KeyFilters))]
         public async Task<IActionResult> SendChangeEmailConfirmation(string mail, string newMail)
         {
 
@@ -139,7 +143,8 @@ namespace WOMBAT.Controllers
         }
 
 
-        [HttpGet("ChangeEmail")]
+        [HttpPost("ChangeEmail")]
+        [ServiceFilter(typeof(KeyFilters))]
         public async Task<IActionResult> ChangeEmail(string id, string newMail, string token)
         {
             var sendResult = await _userRepo.ChangeMail(id, newMail, token);
@@ -151,7 +156,7 @@ namespace WOMBAT.Controllers
 
 
         [HttpPost ("SendResetPasswordConfirmation")]
-        [ServiceFilter(typeof(ActionFilters))]
+        [ServiceFilter(typeof(KeyFilters))]
         public async Task<IActionResult> SendResetPasswordConfirmation(string mail)
         {
 
@@ -160,7 +165,8 @@ namespace WOMBAT.Controllers
             return Ok("Email sent");
         }
 
-        [HttpGet("ResetPassword")]
+        [HttpPost("ResetPassword")]
+        [ServiceFilter(typeof(KeyFilters))]
         public async Task<IActionResult> ResetPassword(string token)
         {
             string authHeader = this.HttpContext.Request.Headers["Authorization"];

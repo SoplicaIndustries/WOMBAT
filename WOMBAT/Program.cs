@@ -33,7 +33,8 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ActionFilters>();
+builder.Services.AddScoped<KeyFilters>();
+builder.Services.AddScoped<DbModeFilter>();
 
 
 builder.Services.AddAuthentication(auth =>

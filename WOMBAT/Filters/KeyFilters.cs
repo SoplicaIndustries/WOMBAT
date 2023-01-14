@@ -4,7 +4,7 @@ using WOMBAT.Tools;
 
 namespace WOMBAT.Filters
 {
-    public class ActionFilters : IActionFilter
+    public class KeyFilters : IActionFilter
     {
         public void OnActionExecuted(ActionExecutedContext context)
         {

@@ -17,7 +17,6 @@ namespace WOMBAT.Interfaces
         Task<List<string>> GetRoles(User user);
 
         Task<bool> ValidateJWT(string token);
-
         Task<string> GenerateToken(User user, List<string> roles);
 
         Task<User> CreateUser(ViewUser vu);

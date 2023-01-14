@@ -84,8 +84,12 @@ namespace WOMBAT.Repositories
 
 
             string JWTstring = new JwtSecurityTokenHandler().WriteToken(JWT);
-            _db.UserTokens.Add(new IdentityUserToken<string> { LoginProvider = "", Name = "", UserId = user.Id, Value = JWTstring });
-            _db.SaveChanges();
+
+            if (_config.GetValue<bool>("JWT:DbMode"))
+            {
+                _db.UserTokens.Add(new IdentityUserToken<string> { LoginProvider = "", Name = "", UserId = user.Id, Value = JWTstring });
+                _db.SaveChanges();
+            }
 
             return JWTstring;
         }
