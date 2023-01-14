@@ -25,6 +25,7 @@ API authentication provides your client user with JSON Web Token, which can be l
         a) Provide valid token issuer (API url)
         b) Provide valid token audience (your application)
         c) Provide your secret JWT key
+        d) Set dbmode to true/false (read more to learn about dbmode)
     3. Mail service
         a) Provide mail address that will be used for sending mail to users
         b) Provide mail password/application password
@@ -36,8 +37,8 @@ API authentication provides your client user with JSON Web Token, which can be l
 ## Database configuration
     1. add migration and update database (using regular Entity framework commands)
     2. Database should have following scheduled events:
-        a) Expired token cleaning every 1 day (event example provided in documentation)
-        b) Unconfirmed user cleaning every 3 hours (event example provided in documentation)
+        a) Expired token cleaning every 1 day (if dbmode is set to true)
+        b) Unconfirmed user cleaning every 3 hours
 ## Documentation
 https://documenter.getpostman.com/view/19462677/2s8ZDR6jzR
         
